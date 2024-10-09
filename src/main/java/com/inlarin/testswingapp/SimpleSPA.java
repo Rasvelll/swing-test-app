@@ -1,5 +1,8 @@
 package com.inlarin.testswingapp;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -15,6 +18,7 @@ import java.util.stream.IntStream;
  * The application provides an intro screen where the user specifies how many numbers to generate,
  * and a sorting screen that displays buttons representing those numbers, allowing the user to sort or reset them.
  */
+@Getter
 public class SimpleSPA extends JFrame {
 
 
@@ -84,9 +88,24 @@ public class SimpleSPA extends JFrame {
     private JPanel sortPanel;
 
     /**
+     * Input that contains the count of numbers input.
+     */
+    private JTextField elementsCountInput;
+
+    /**
      * Scroll pane that holds the panel displaying the number buttons.
      */
     private JScrollPane numbersScrollPanel;
+
+    /**
+     * Button used to go to sort page.
+     */
+    private JButton introButton;
+
+    /**
+     * Button used to go back to intro page.
+     */
+    private JButton resetButton;
 
     /**
      * Button used to trigger the sorting of numbers.
@@ -96,12 +115,13 @@ public class SimpleSPA extends JFrame {
     /**
      * Flag indicating whether the numbers should be sorted in descending order (true) or ascending order (false).
      */
+    @Setter
     private boolean descendingOrder = true;
 
     /**
      * The number of elements (number buttons) to be displayed, determined by user input.
      */
-    private int elementsCount;
+    private Integer elementsCount;
 
 
     /**
@@ -141,16 +161,16 @@ public class SimpleSPA extends JFrame {
      *
      * @return JPanel containing the input field and button to proceed to the sorting panel.
      */
-    private JPanel createIntroPanel() {
+    JPanel createIntroPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel promptLabel = new JLabel("How many numbers to display?");
-        JTextField inputField = new JTextField(MAX_NUMBER_OF_COLS);
+        elementsCountInput = new JTextField(MAX_NUMBER_OF_COLS);
 
-        JButton enterButton = new JButton("Enter");
-        enterButton.setBackground(Color.BLUE);
-        enterButton.setForeground(Color.WHITE);
-        enterButton.setFocusPainted(false);
+        introButton = new JButton("Enter");
+        introButton.setBackground(Color.BLUE);
+        introButton.setForeground(Color.WHITE);
+        introButton.setFocusPainted(false);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(GAP, GAP, GAP, GAP);
@@ -161,13 +181,13 @@ public class SimpleSPA extends JFrame {
         panel.add(promptLabel, gbc);
 
         gbc.gridy = 1;
-        panel.add(inputField, gbc);
+        panel.add(elementsCountInput, gbc);
 
         gbc.gridy = 2;
-        panel.add(enterButton, gbc);
+        panel.add(introButton, gbc);
 
-        enterButton.addActionListener(e -> {
-            String input = inputField.getText();
+        introButton.addActionListener(e -> {
+            String input = elementsCountInput.getText();
             int count;
             try {
                 count = Integer.parseInt(input.trim());
@@ -195,7 +215,7 @@ public class SimpleSPA extends JFrame {
      *
      * @return JPanel containing the sorting interface.
      */
-    private JPanel createSortPanel() {
+    JPanel createSortPanel() {
         sortPanel = new JPanel(new BorderLayout());
         sortPanel.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
 
@@ -203,7 +223,7 @@ public class SimpleSPA extends JFrame {
         buttonsPanel.setPreferredSize(new Dimension(BUTTON_WIDTH, (EL_HEIGHT) * MAX_NUMBER_OF_COLS));
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 
-        JButton resetButton = new JButton("Reset");
+        resetButton = new JButton("Reset");
         resetButton.setForeground(Color.WHITE);
         resetButton.setBackground(Color.GREEN);
         resetButton.setMaximumSize(new Dimension(BUTTON_WIDTH, EL_HEIGHT));
@@ -237,7 +257,7 @@ public class SimpleSPA extends JFrame {
      * @param count the number of random numbers to generate
      * @return an array of random integers
      */
-    private int[] generateRandomNumbers(int count) {
+    int[] generateRandomNumbers(int count) {
         Random rand = new Random();
         int[] numbers = new int[count];
         boolean hasLowNumber = false;
@@ -261,7 +281,7 @@ public class SimpleSPA extends JFrame {
      *
      * @param numbers the array of numbers to display
      */
-    private void initNumbersPanel(int[] numbers) {
+    void initNumbersPanel(int[] numbers) {
         JPanel numbersPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(GAP, 0, GAP, GAP);
@@ -301,7 +321,7 @@ public class SimpleSPA extends JFrame {
      * @param num the number to be displayed on the button
      * @return a JButton representing the number
      */
-    private JButton getButton(int num) {
+    JButton getButton(int num) {
         JButton numButton = new JButton(String.valueOf(num));
         numButton.setBackground(Color.BLUE);
         numButton.setForeground(Color.WHITE);
@@ -322,7 +342,7 @@ public class SimpleSPA extends JFrame {
      *
      * @param jPanel the panel containing the number buttons
      */
-    private void updateJScrollPane(JPanel jPanel) {
+    void updateJScrollPane(JPanel jPanel) {
         numbersScrollPanel.setViewportView(jPanel);
         int countOfCols = (int) Math.ceil(numberButtons.size() / 10.0);
         numbersScrollPanel.setHorizontalScrollBarPolicy(countOfCols > MAX_NUMBER_OF_COLS ? JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS : JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -336,7 +356,7 @@ public class SimpleSPA extends JFrame {
      * ActionListener implementation that handles the sorting of number buttons when the "Sort" button is clicked.
      * The numbers can be sorted in ascending or descending order depending on the current state.
      */
-    private class SortAction implements ActionListener {
+    class SortAction implements ActionListener {
 
         /**
          * Handles the action when the "Sort" button is clicked. It toggles the sorting order (ascending/descending),
@@ -346,7 +366,6 @@ public class SimpleSPA extends JFrame {
          */
         @Override
         public void actionPerformed(ActionEvent e) {
-            descendingOrder = !descendingOrder;
             sortButton.setEnabled(false);
             int[] arr = new int[numberButtons.size()];
 
@@ -357,6 +376,7 @@ public class SimpleSPA extends JFrame {
                 quickSort(arr, 0, arr.length - 1);
                 sortButton.setEnabled(true);
             }).start();
+            descendingOrder = !descendingOrder;
         }
 
         /**
@@ -366,7 +386,7 @@ public class SimpleSPA extends JFrame {
          * @param low  the starting index of the subarray to be sorted
          * @param high the ending index of the subarray to be sorted
          */
-        private void quickSort(int[] arr, int low, int high) {
+        void quickSort(int[] arr, int low, int high) {
             if (arr == null || arr.length == 0 || low >= high)
                 return;
 
@@ -401,7 +421,7 @@ public class SimpleSPA extends JFrame {
          * @param high  the ending index of the subarray
          * @return the index of the pivot element after partitioning
          */
-        private int partition(int[] arr, int low, int high) {
+        int partition(int[] arr, int low, int high) {
             int middle = low + (high - low) / 2;
             int pivot = arr[middle];
 
@@ -428,7 +448,7 @@ public class SimpleSPA extends JFrame {
          * @param index1 the index of the first element
          * @param index2 the index of the second element
          */
-        private void swap(int[] arr, int index1, int index2) {
+        void swap(int[] arr, int index1, int index2) {
             int temp = arr[index1];
             arr[index1] = arr[index2];
             arr[index2] = temp;
@@ -442,7 +462,7 @@ public class SimpleSPA extends JFrame {
          * @param i the index of the first button
          * @param j the index of the second button
          */
-        private void swapButtons(int i, int j) {
+        void swapButtons(int i, int j) {
             String tempText = numberButtons.get(i).getText();
             numberButtons.get(i).setText(numberButtons.get(j).getText());
             numberButtons.get(j).setText(tempText);
