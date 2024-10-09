@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for the SimpleSPA class.
  * This class contains tests for the functionalities of the SimpleSPA,
  * including random number generation, sorting functionality, and input validation.
+ * It's also better to use private modifier for methods, but not in the one-class application.
  */
 class SimpleSPATest {
 
