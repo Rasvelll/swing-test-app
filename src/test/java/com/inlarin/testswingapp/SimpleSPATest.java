@@ -3,7 +3,8 @@ package com.inlarin.testswingapp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.*;
+import javax.swing.JTextField;
+import javax.swing.JButton;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -19,7 +20,26 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SimpleSPATest {
 
+    /**
+     * Variable that contains application logic
+     */
     private SimpleSPA spa;
+
+    /**
+     * Buttons with values less than this element can reset array and with values bigger than this should throw error message.
+     */
+    private static final int ARRAY_SPECIFIC_ELEMENT = 30;
+
+    /**
+     * The minimum button value that can be generated
+     */
+    private static final int ARRAY_MIN_NUMBER = 1;
+
+    /**
+     * The maximum button value that can be generated
+     */
+    private static final int ARRAY_MAX_NUMBER = 1000;
+
 
     /**
      * Initializes the SimpleSPA instance before each test.
@@ -41,8 +61,8 @@ class SimpleSPATest {
         int[] numbers = spa.generateRandomNumbers(count);
 
         assertEquals(count, numbers.length, "Generated numbers length should match the count");
-        assertTrue(IntStream.of(numbers).allMatch(num -> num >= 1 && num <= 1000), "All numbers should be between 1 and 1000");
-        assertTrue(IntStream.of(numbers).anyMatch(num -> num <= 30), "At least one number should be <= 30");
+        assertTrue(IntStream.of(numbers).allMatch(num -> num >= ARRAY_MIN_NUMBER && num <= ARRAY_MAX_NUMBER), "All numbers should be between 1 and 1000");
+        assertTrue(IntStream.of(numbers).anyMatch(num -> num <= ARRAY_SPECIFIC_ELEMENT), "At least one number should be <= 30");
     }
 
     /**
@@ -53,7 +73,7 @@ class SimpleSPATest {
     void testGenerateRandomNumbers_EnsuresLowNumber() {
         int count = 5;
         int[] numbers = spa.generateRandomNumbers(count);
-        assertTrue(IntStream.of(numbers).anyMatch(num -> num <= 30), "Generated numbers should include at least one <= 30");
+        assertTrue(IntStream.of(numbers).anyMatch(num -> num <= ARRAY_SPECIFIC_ELEMENT), "Generated numbers should include at least one <= 30");
     }
 
     /**
@@ -67,7 +87,7 @@ class SimpleSPATest {
         spa.setDescendingOrder(false);
         spa.getSortButton().doClick();
 
-        await().atMost(1, TimeUnit.SECONDS).until(() ->
+        await().atMost(3, TimeUnit.SECONDS).until(() ->
                 Arrays.equals(new Integer[]{1, 2, 5, 7, 9},
                         spa.getNumberButtons().stream()
                                 .map(jbutton -> Integer.parseInt(jbutton.getText()))
@@ -76,7 +96,7 @@ class SimpleSPATest {
 
         spa.setDescendingOrder(true);
         spa.getSortButton().doClick();
-        await().atMost(1, TimeUnit.SECONDS).until(() ->
+        await().atMost(3, TimeUnit.SECONDS).until(() ->
                 Arrays.equals(new Integer[]{9, 7, 5, 2, 1},
                         spa.getNumberButtons().stream()
                                 .map(jbutton -> Integer.parseInt(jbutton.getText()))
@@ -105,12 +125,13 @@ class SimpleSPATest {
      */
     @Test
     void testValidInput() {
+        Integer value = 1000;
         spa.createIntroPanel();
-        spa.getElementsCountInput().setText("1000");
+        spa.getElementsCountInput().setText(value.toString());
         JButton enterButton = spa.getIntroButton();
 
         enterButton.doClick();
 
-        assertEquals(1000, spa.getElementsCount());
+        assertEquals(value, spa.getElementsCount());
     }
 }

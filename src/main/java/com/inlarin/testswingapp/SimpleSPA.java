@@ -3,13 +3,34 @@ package com.inlarin.testswingapp;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import javax.swing.JOptionPane;
+import javax.swing.BoxLayout;
+import javax.swing.Box;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import javax.swing.WindowConstants;
+
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 
@@ -36,6 +57,11 @@ public class SimpleSPA extends JFrame {
      * Gap between elements (used for spacing).
      */
     private static final int GAP = 5;
+
+    /**
+     * Height of the scroll element
+     */
+    private static final int SCROLL_HEIGHT = 5;
 
     /**
      * Width of the application window.
@@ -66,6 +92,26 @@ public class SimpleSPA extends JFrame {
      * Maximum number of columns to display in the numbers panel.
      */
     private static final int MAX_NUMBER_OF_COLS = 10;
+
+    /**
+     * Low border of sorting interval.
+     */
+    private static final int LOW_SORTING_BORDER = 0;
+
+    /**
+     * Buttons with values less than this element can reset array and with values bigger than this should throw error message.
+     */
+    private static final int ARRAY_SPECIFIC_ELEMENT = 30;
+
+    /**
+     * The minimum button value that can be generated
+     */
+    private static final int ARRAY_MIN_NUMBER = 1;
+
+    /**
+     * The maximum button value that can be generated
+     */
+    private static final int ARRAY_MAX_NUMBER = 1000;
 
     /**
      * Layout manager that switches between panels, simulating a single-page application.
@@ -123,12 +169,18 @@ public class SimpleSPA extends JFrame {
      */
     private Integer elementsCount;
 
+    /**
+     * Variable which is used for button value generation.
+     */
+    private final Random rand;
+
 
     /**
      * Constructs the main frame of the application with an intro panel and a sorting panel.
      * It sets the window title, size, and initializes components for number generation and sorting.
      */
     public SimpleSPA() {
+        rand = new Random();
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
@@ -140,7 +192,7 @@ public class SimpleSPA extends JFrame {
 
         setTitle("Single Page Application");
         setSize(WIDTH, HEIGHT);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         add(mainPanel);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -196,7 +248,7 @@ public class SimpleSPA extends JFrame {
                 return;
             }
 
-            if (count < 1 || count > 1000) {
+            if (count < ARRAY_MIN_NUMBER || count > ARRAY_MAX_NUMBER) {
                 JOptionPane.showMessageDialog(null, "Please enter a number between 1 and 1000.");
                 return;
             }
@@ -252,25 +304,24 @@ public class SimpleSPA extends JFrame {
 
     /**
      * Generates an array of random numbers based on the specified count.
-     * Ensures that at least one number is less than or equal to 30.
+     * Ensures that at least one number is less than or equal to 30 (ARRAY_SPECIFIC_ELEMENT) .
      *
      * @param count the number of random numbers to generate
      * @return an array of random integers
      */
     int[] generateRandomNumbers(int count) {
-        Random rand = new Random();
         int[] numbers = new int[count];
         boolean hasLowNumber = false;
 
         for (int i = 0; i < count; i++) {
-            numbers[i] = rand.nextInt(1000) + 1;
-            if (numbers[i] <= 30) {
+            numbers[i] = rand.nextInt(ARRAY_MAX_NUMBER) + ARRAY_MIN_NUMBER;
+            if (numbers[i] <= ARRAY_SPECIFIC_ELEMENT) {
                 hasLowNumber = true;
             }
         }
 
         if (!hasLowNumber) {
-            numbers[rand.nextInt(count)] = rand.nextInt(30) + 1;
+            numbers[rand.nextInt(count)] = rand.nextInt(ARRAY_SPECIFIC_ELEMENT) + ARRAY_MIN_NUMBER;
         }
 
         return numbers;
@@ -327,8 +378,10 @@ public class SimpleSPA extends JFrame {
         numButton.setForeground(Color.WHITE);
         numButton.setPreferredSize(new Dimension(EL_WIDTH, EL_HEIGHT));
         numButton.addActionListener(e -> {
-            if (Integer.parseInt(numButton.getText()) <= 30) {
+            int numberOnButton = Integer.parseInt(numButton.getText());
+            if (numberOnButton <= ARRAY_SPECIFIC_ELEMENT) {
                 numberButtons.clear();
+                elementsCount = numberOnButton;
                 initNumbersPanel(generateRandomNumbers(elementsCount));
             } else {
                 JOptionPane.showMessageDialog(null, "Please select a value smaller or equal to 30.");
@@ -344,12 +397,12 @@ public class SimpleSPA extends JFrame {
      */
     void updateJScrollPane(JPanel jPanel) {
         numbersScrollPanel.setViewportView(jPanel);
-        int countOfCols = (int) Math.ceil(numberButtons.size() / 10.0);
+        int countOfCols = (int) Math.ceil(numberButtons.size() / (double) MAX_NUMBER_OF_COLS);
         numbersScrollPanel.setHorizontalScrollBarPolicy(countOfCols > MAX_NUMBER_OF_COLS ? JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS : JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         numbersScrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         countOfCols = Math.min(countOfCols, MAX_NUMBER_OF_COLS);
         numbersScrollPanel.setPreferredSize(new Dimension((EL_WIDTH + GAP)* countOfCols, (EL_HEIGHT + GAP * 2) * MAX_ELEMENTS_IN_COL));
-        numbersScrollPanel.getHorizontalScrollBar().setPreferredSize(new Dimension(EL_WIDTH, 5));
+        numbersScrollPanel.getHorizontalScrollBar().setPreferredSize(new Dimension(EL_WIDTH, SCROLL_HEIGHT));
     }
 
     /**
@@ -373,7 +426,7 @@ public class SimpleSPA extends JFrame {
                     .forEach(i -> arr[i] = Integer.parseInt(numberButtons.get(i).getText()));
 
             new Thread(() -> {
-                quickSort(arr, 0, arr.length - 1);
+                quickSort(arr, arr.length - 1);
                 sortButton.setEnabled(true);
             }).start();
             descendingOrder = !descendingOrder;
@@ -383,20 +436,19 @@ public class SimpleSPA extends JFrame {
          * Performs a non-recursive quicksort on the given array using an explicit stack to manage subarray bounds.
          *
          * @param arr  the array of integers to be sorted
-         * @param low  the starting index of the subarray to be sorted
          * @param high the ending index of the subarray to be sorted
          */
-        void quickSort(int[] arr, int low, int high) {
-            if (arr == null || arr.length == 0 || low >= high)
+        void quickSort(int[] arr, int high) {
+            if (arr == null || arr.length == 0 || high <= LOW_SORTING_BORDER)
                 return;
 
-            Stack<Integer> stack = new Stack<>();
-            stack.push(low);
+            Deque<Integer> stack = new ArrayDeque<>();
+            stack.push(LOW_SORTING_BORDER);
             stack.push(high);
 
             while (!stack.isEmpty()) {
                 high = stack.pop();
-                low = stack.pop();
+                int low = stack.pop();
 
                 int pivotIndex = partition(arr, low, high);
 
@@ -412,15 +464,6 @@ public class SimpleSPA extends JFrame {
             }
         }
 
-        /**
-         * Partitions the array around a pivot element, sorting elements so that all values smaller (or larger,
-         * depending on the order) than the pivot are on the left and all larger (or smaller) values are on the right.
-         *
-         * @param arr   the array to be partitioned
-         * @param low   the starting index of the subarray
-         * @param high  the ending index of the subarray
-         * @return the index of the pivot element after partitioning
-         */
         int partition(int[] arr, int low, int high) {
             int middle = low + (high - low) / 2;
             int pivot = arr[middle];
@@ -457,15 +500,30 @@ public class SimpleSPA extends JFrame {
         }
 
         /**
-         * Swaps the text of two number buttons, reflecting the swap in the underlying array.
+         * Swaps the text of two number buttons and change background for the time of swapping,
+         * reflecting the swap in the underlying array.
          *
          * @param i the index of the first button
          * @param j the index of the second button
          */
         void swapButtons(int i, int j) {
+            numberButtons.get(i).setBackground(Color.RED);
+            numberButtons.get(j).setBackground(Color.YELLOW);
+
+            // Thread.sleep() can be used for a clearer vision
+            /*
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            */
+
             String tempText = numberButtons.get(i).getText();
             numberButtons.get(i).setText(numberButtons.get(j).getText());
             numberButtons.get(j).setText(tempText);
+            numberButtons.get(i).setBackground(Color.BLUE);
+            numberButtons.get(j).setBackground(Color.BLUE);
         }
     }
 
