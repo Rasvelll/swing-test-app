@@ -2,6 +2,7 @@ package com.inlarin.testswingapp;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -40,6 +41,7 @@ import java.util.stream.IntStream;
  * and a sorting screen that displays buttons representing those numbers, allowing the user to sort or reset them.
  */
 @Getter
+@Slf4j
 public class SimpleSPA extends JFrame {
 
 
@@ -174,6 +176,11 @@ public class SimpleSPA extends JFrame {
      */
     private final Random rand;
 
+    /**
+     * Variable which is used for containing sorting thread
+     */
+    private Thread sortThread;
+
 
     /**
      * Constructs the main frame of the application with an intro panel and a sorting panel.
@@ -292,6 +299,9 @@ public class SimpleSPA extends JFrame {
         sortButton.addActionListener(new SortAction());
 
         resetButton.addActionListener(e -> {
+            if(sortThread != null && sortThread.isAlive()) {
+                sortThread.interrupt();
+            }
             descendingOrder = true;
             numberButtons.clear();
             cardLayout.show(mainPanel, "Intro");
@@ -420,15 +430,20 @@ public class SimpleSPA extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             sortButton.setEnabled(false);
+            resetButton.setEnabled(false);
             int[] arr = new int[numberButtons.size()];
 
             IntStream.range(0, numberButtons.size())
                     .forEach(i -> arr[i] = Integer.parseInt(numberButtons.get(i).getText()));
 
-            new Thread(() -> {
+
+            sortThread = new Thread(() -> {
                 quickSort(arr, arr.length - 1);
                 sortButton.setEnabled(true);
-            }).start();
+                resetButton.setEnabled(true);
+            });
+            sortThread.start();
+
             descendingOrder = !descendingOrder;
         }
 
@@ -507,25 +522,28 @@ public class SimpleSPA extends JFrame {
          * @param j the index of the second button
          */
         void swapButtons(int i, int j) {
-            if(i == j) {
-                numberButtons.get(i).setBackground(Color.GREEN);
-            } else {
-                numberButtons.get(i).setBackground(Color.RED);
-                numberButtons.get(j).setBackground(Color.ORANGE);
-            }
-
             // Thread.sleep() can be used for a clearer vision
-           /* try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }*/
+            try {
+                if(i == j) {
+                    numberButtons.get(i).setBackground(Color.GREEN);
+                } else {
+                    numberButtons.get(i).setBackground(Color.RED);
+                    numberButtons.get(j).setBackground(Color.ORANGE);
+                }
 
-            String tempText = numberButtons.get(i).getText();
-            numberButtons.get(i).setText(numberButtons.get(j).getText());
-            numberButtons.get(j).setText(tempText);
-            numberButtons.get(i).setBackground(Color.BLUE);
-            numberButtons.get(j).setBackground(Color.BLUE);
+                Thread.sleep(500);
+                String tempText = numberButtons.get(i).getText();
+                numberButtons.get(i).setText(numberButtons.get(j).getText());
+                numberButtons.get(j).setText(tempText);
+                numberButtons.get(i).setBackground(Color.BLUE);
+                numberButtons.get(j).setBackground(Color.BLUE);
+            } catch (InterruptedException e) {
+                log.error("oh, thread was interrupted");
+                sortButton.setEnabled(true);
+                resetButton.setEnabled(true);
+            } catch (IndexOutOfBoundsException indexOutOfBoundsException) {
+                log.error("oh, there are no buttons");
+            }
         }
     }
 
