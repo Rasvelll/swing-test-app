@@ -507,17 +507,19 @@ public class SimpleSPA extends JFrame {
          * @param j the index of the second button
          */
         void swapButtons(int i, int j) {
-            numberButtons.get(i).setBackground(Color.RED);
-            numberButtons.get(j).setBackground(Color.YELLOW);
+            if(i == j) {
+                numberButtons.get(i).setBackground(Color.GREEN);
+            } else {
+                numberButtons.get(i).setBackground(Color.RED);
+                numberButtons.get(j).setBackground(Color.ORANGE);
+            }
 
             // Thread.sleep() can be used for a clearer vision
-            /*
-            try {
-                Thread.sleep(300);
+           /* try {
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
-            }
-            */
+            }*/
 
             String tempText = numberButtons.get(i).getText();
             numberButtons.get(i).setText(numberButtons.get(j).getText());
